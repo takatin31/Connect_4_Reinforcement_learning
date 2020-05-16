@@ -4,11 +4,52 @@ var circles = []
 var bannedCircles = []
 var turn = 1
 var cpt = 0
+const TOTAL = 500;
+const nbrGames = 100
+var cptGames = 0
+var end = 0
+let brainJSON
+let nbrWinsC1 = 0
+let nbrWinsC2 = 0
+
+
+function preload(){
+    brainJSON = loadJSON("AI.json")
+}
+
 
 function setup(){
     createCanvas(820, 700)
+    init()
+    
+    let computerBrain = NeuralNetwork.deserialize(brainJSON)
+
+    computer1 = new Computer(computerBrain)
+    computer2 = new Computer(computerBrain)
+    computerPlay()
+}
+
+function draw(){
+    if (end == 0){
+        computerPlay()
+    }
+    
+}
+
+function keyPressed() {
+    if (key === 'S') {
+      saveJSON(computer1.brain, 'AI.json');
+    }
+  }
+
+function init(){
     background(54, 107, 255)
     fill(230)
+    circlesMatrix = []
+    circles = []
+    bannedCircles = []
+    turn = 1
+    end = 0
     for (let i = 0 ; i < 6; i++ ){
         circlesMatrix[i] = []
         bannedCircles[i] = []
@@ -21,8 +62,38 @@ function setup(){
     }
 }
 
-function draw(){
+function computerPlay(){
+    let index = -1
 
+    if (turn == 1){
+        index = computer1.think(circles)
+    }else{
+        index = computer2.think(circles)
+    }
+
+    let i = floor(index/7)
+    let j = index%7
+
+    if (turn == 1)
+        fill(255, 255, 0)
+    else
+        fill(255, 0, 0)
+    
+
+    if (circles[index] == 0){
+        
+        circle((circleRadius + 15)*j + circleRadius/2 + 10, (circleRadius + 15)*i + circleRadius/2 + 10,circleRadius,circleRadius)
+        circles[index] = turn
+        circlesMatrix[i][j] = turn
+        cpt = 0
+        for (let i = 0 ; i < 6; i++ ){
+            for (let j = 0 ; j < 7; j++){
+                bannedCircles[i][j] = 0
+            }
+        }
+        verifyAll()
+        turn *= -1
+    }
 }
 
 function getCircle(posX, posY){
@@ -59,23 +130,68 @@ function mouseClicked(){
         }
         verifyAll()
         turn *= -1
+        if (end == 0){
+            computerPlay()
+        }
     }
    
 }
 
 function verifyAll(){
+    let cptEmptyCases = 0
     for (let i = 0 ; i < 6; i++ ){
         for (let j = 0 ; j < 7; j++){
+            if (circlesMatrix[i][j] == 0){
+                cptEmptyCases++
+            }
             if (circlesMatrix[i][j] == turn && bannedCircles[i][j] != 1){
                 for (let dir = 0; dir < 8; dir++){
                     let sum = verifyCase(i, j, dir, turn)
-                    if (sum == 4 || sum == -4){
-                        console.log("winner is "+turn)
+                    if (sum == 4 || sum == -4){    
+                        end = 1
+                        if (turn){
+                            nbrWinsC1++
+                        }else{
+                            nbrWinsC2++
+                        }
+                        //console.log("winner is "+turn)
+                        nextGeneration()
                     }
                 }
             }
         }
     }
+    if (cptEmptyCases == 0){
+        nextGeneration()
+    }
+}
+
+function nextGeneration(){
+    
+    cptGames++
+    console.log("generation : "+cptGames);
+    
+    
+    if (cptGames < nbrGames){
+        init()
+        if (turn == 1){
+            computer2 = new Computer(computer1.brain)
+            computer2.mutate()
+        }else{
+            computer1 = new Computer(computer2.brain)
+            computer1.mutate()
+        }
+    }else{
+        console.log(nbrWinsC1 + "   " + nbrWinsC2);
+        
+        if (nbrWinsC1 > nbrWinsC2){
+            saveJSON(computer1.brain, 'AI.json');
+        }else{
+            saveJSON(computer2.brain, 'AI.json');
+        }
+    }
+    
+   
 }
 
 function verifyCase(i, j, dir, turn){
