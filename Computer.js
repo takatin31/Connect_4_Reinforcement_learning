@@ -18,7 +18,7 @@ function Computer(brain) {
     if (brain) {
         this.brain = brain.copy();
     } else {
-        this.brain = new NeuralNetwork(42, 30, 42);
+        this.brain = new NeuralNetwork(42, 30, 7);
     }
 
     this.copy = function() {
@@ -35,13 +35,13 @@ function Computer(brain) {
         let max = 0
         let index = -1
 
-        for (let i = 0 ; i < 6; i++){
-            for (let j = 0 ; j < 7 ; j++){
-                if (circles[i*7+j] == 0 && output[i*7+j] >= max){
-                    index = i*7+j
-                    max = output[index]
-                }
+        for (let i = 0 ; i < 7; i++){
+          
+            if (output[i] >= max && tops[i] < 6){
+                index = i
+                max = output[index]
             }
+            
         }
 
         return index

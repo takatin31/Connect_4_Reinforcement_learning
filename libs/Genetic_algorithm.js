@@ -3,14 +3,14 @@ function nextGeneration() {
     calculateFitness();
 
     for (let i = 0; i < TOTAL; i++) {
-        birds[i] = poolSelection();
+        computer[i] = poolSelection();
     }
-    savedBirds = [];
+    savedComputers = [];
 }
 
 function pickOne() {
-    let bird = random(savedBirds);
-    let child = new Bird(bird.brain);
+    let computer = random(savedComputers);
+    let child = new Computer(computer.brain);
     //child.mutate();
     return child;
 }
@@ -26,7 +26,7 @@ function poolSelection() {
     // Higher probabilities will be more likely to be fixed since they will
     // subtract a larger number towards zero
     while (r > 0) {
-        r -= savedBirds[index].fitness;
+        r -= savedComputers[index].fitness;
         // And move on to the next
         index += 1;
     }
@@ -34,8 +34,8 @@ function poolSelection() {
     // Go back one
     index -= 1;
 
-    let bird = savedBirds[index];
-    let child = new Bird(bird.brain);
+    let computer = savedComputers[index];
+    let child = new Computer(computer.brain);
     child.mutate();
     return child;
 
@@ -48,11 +48,11 @@ function poolSelection() {
 function calculateFitness() {
 
     let sum = 0;
-    for (bird of savedBirds) {
-        sum += bird.score;
+    for (computer of savedComputers) {
+        sum += computer.score;
     }
 
-    for (bird of savedBirds) {
-        bird.fitness = bird.score / sum;
+    for (computer of savedComputers) {
+        computer.fitness = computer.score / sum;
     }
 }

@@ -4,13 +4,17 @@ var circles = []
 var bannedCircles = []
 var turn = 1
 var cpt = 0
-const TOTAL = 500;
-const nbrGames = 100
+const TOTAL = 10;
+const nbrGames = 10000
 var cptGames = 0
 var end = 0
 let brainJSON
 let nbrWinsC1 = 0
 let nbrWinsC2 = 0
+var computers = []
+var savedComputers = []
+var epoch = 0
+var tops = []
 
 
 function preload(){
@@ -21,6 +25,8 @@ function preload(){
 function setup(){
     createCanvas(820, 700)
     init()
+
+   
     
     let computerBrain = NeuralNetwork.deserialize(brainJSON)
 
@@ -30,8 +36,12 @@ function setup(){
 }
 
 function draw(){
-    if (end == 0){
+    frameRate(1000);
+    
+    for (let i = 0 ; i < 1000; i++){
+        if (end == 0){
         computerPlay()
+    }
     }
     
 }
@@ -45,6 +55,7 @@ function keyPressed() {
 function init(){
     background(54, 107, 255)
     fill(230)
+    tops = []
     circlesMatrix = []
     circles = []
     bannedCircles = []
@@ -60,6 +71,10 @@ function init(){
             bannedCircles[i][j] = 0
         }
     }
+
+    for (let i = 0 ; i < 7; i++){
+        tops[i] = 0
+    }
 }
 
 function computerPlay(){
@@ -71,18 +86,18 @@ function computerPlay(){
         index = computer2.think(circles)
     }
 
-    let i = floor(index/7)
-    let j = index%7
+    
 
     if (turn == 1)
         fill(255, 255, 0)
     else
         fill(255, 0, 0)
-    
+    let j =index
 
-    if (circles[index] == 0){
-        
-        circle((circleRadius + 15)*j + circleRadius/2 + 10, (circleRadius + 15)*i + circleRadius/2 + 10,circleRadius,circleRadius)
+    if (tops[index] < 6){
+        let i = tops[index]
+        tops[index]++
+        circle((circleRadius + 15)*j + circleRadius/2 + 10, (circleRadius + 15)*(5-i) + circleRadius/2 + 10,circleRadius,circleRadius)
         circles[index] = turn
         circlesMatrix[i][j] = turn
         cpt = 0
@@ -114,13 +129,17 @@ function mouseClicked(){
 
     
     let j = position.x
-    let i = position.y
-    let index = i*7+j
     
-
-    if (circles[index] == 0){
-        circle((circleRadius + 15)*j + circleRadius/2 + 10, (circleRadius + 15)*i + circleRadius/2 + 10,circleRadius,circleRadius)
-        circles[index] = turn
+    let index = j
+    
+  
+    
+    if (tops[index] < 6){
+        let i = tops[index]
+        tops[index]++
+        console.log(i);
+        circle((circleRadius + 15)*j + circleRadius/2 + 10, (circleRadius + 15)*(5-i) + circleRadius/2 + 10,circleRadius,circleRadius)
+        circles[i*7+j] = turn
         circlesMatrix[i][j] = turn
         cpt = 0
         for (let i = 0 ; i < 6; i++ ){
@@ -149,7 +168,7 @@ function verifyAll(){
                     let sum = verifyCase(i, j, dir, turn)
                     if (sum == 4 || sum == -4){    
                         end = 1
-                        if (turn){
+                        if (turn == 1){
                             nbrWinsC1++
                         }else{
                             nbrWinsC2++
@@ -169,7 +188,11 @@ function verifyAll(){
 function nextGeneration(){
     
     cptGames++
-    console.log("generation : "+cptGames);
+    if (cptGames%1000 == 0){
+        epoch++
+        console.log("epoch : "+epoch);
+    }
+    
     
     
     if (cptGames < nbrGames){
